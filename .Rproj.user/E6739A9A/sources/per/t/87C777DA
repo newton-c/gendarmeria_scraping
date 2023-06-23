@@ -1,0 +1,28 @@
+{
+    "id": "87C777DA",
+    "path": "~/Desktop/IC/2023/IC Datos/Argentina/gendarmería_scraping/scripts/analysis.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1183908890",
+    "contents": "",
+    "dirty": false,
+    "created": 1686151214519.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "tempName": "Untitled1",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "34,0",
+        "scrollLine": "0",
+        "marks": "<:63,0\n>:63,0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1686677175,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1686677175067,
+    "read_only": false,
+    "read_only_alternatives": []
+}

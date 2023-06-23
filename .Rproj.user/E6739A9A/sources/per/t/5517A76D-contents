@@ -1,0 +1,229 @@
+library(tidyverse)
+library(ICplots)
+library(plotly)
+
+source("scripts/finalize_plots.R")
+source("/Users/cn/Desktop/IC/IC_data/ICplots/R/theme_ic.R")
+theme_set(theme_ic())
+
+# monthly kidnapping trends --------------------------------------------------
+monthly <- ggplot() +
+  geom_line(data = se_mes,
+            mapping = aes(x = date,
+                          y = cases,
+                          color = "# of Monthly Cases    ")) +
+  geom_smooth(data = se_mes,
+              mapping = aes(x = date,
+                            y = cases,
+                            color = "Average # of Monthly Cases"),
+              se = F) +
+  labs(title = "Kidnappings in Argentina",
+       subtitle = "2015 — 2023\n",
+       caption = "insightcrime.org") +
+  geom_hline(yintercept = 0, color = "#3b3b3b") +
+  scale_color_manual(values = c("#5FA69B", "#B70039")) +
+  xlab("Year") +
+  ylab("Kidnapping Victims") +
+  theme(title = element_text(hjust = 0),
+        legend.position = c(-.06, 1.04),
+        legend.direction = "horizontal")
+monthly
+
+
+# To Do: Change Source text to "Roboto Regular" and the font color to "#9D9D9D"
+finalise_plot(plot_name = monthly,
+              source = "Source: UFESE",
+              save_filepath = "figs/monthly.png")
+
+# known kidnapping locations -------------------------------------------------
+count_prov <- ggplot(subset(provs, prov != "Chaco" & prov != "Formosa"),
+                     aes(x = reorder(prov, prov, function(x)-length(x)))) +
+  geom_bar(fill = "#B70039") +
+  geom_hline(yintercept = 0, color = "#3b3b3b") +
+  theme_ic() + 
+  labs(title = "Kidnappings by Province",
+       subtitle = "2016 — 2023") +
+  scale_x_discrete(labels = c("Buenos\nAires", "CABA", "Santa Fe", "Tucumán",
+                              "Mendoza", "Salta", "Córdoba"))  +
+  theme(title = element_text(hjust = 0),
+        axis.text.x = element_text(size = 12))
+count_prov
+
+finalise_plot(plot_name = count_prov,
+              source = "Source: UFESE",
+              save_filepath = "figs/count_prov.png")
+
+# Unemployment and poverty ---------------------------------------------------
+econ_facet <- ggplot(pov_unem_df,
+                     aes(x = year, y = value, color = as.factor(metric))) +
+  geom_line(size = 1) +
+  facet_wrap(~metric) +
+  scale_x_continuous(breaks = c(2015, 2017, 2019, 2021, 2023),
+                     labels = c("2015", "2017","2019", "2021", "2023")) +
+  scale_color_manual(values = c("#5FA69B", "#262c81")) +
+  geom_hline(yintercept = 0, color = "#3b3b3b")  +
+  theme(title = element_text(hjust = 0)) +
+  labs(title = "Unemployment and Poverty in Argentina",
+       subtitle = "2015 — 2023\n") +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        legend.position = c(-.05, 1.04),
+        legend.direction = "horizontal",
+        legend.margin = ggplot2::margin(25, 0, 45, 0))
+econ_facet
+
+finalise_plot(plot_name = econ_facet,
+              source = "Sources: INDEC, ILO",
+              save_filepath = "figs/econ_facet.png")
+
+econ_combined <- ggplot(pov_unem_df,
+                     aes(x = year, y = value, color = metric)) +
+  geom_line(size = 1) +
+  scale_x_continuous(breaks = c(2015, 2017, 2019, 2021, 2023),
+                     labels = c("2015", "2017","2019", "2021", "2023")) +
+  scale_color_manual(values = c("#5FA69B", "#262c81")) +
+  geom_hline(yintercept = 0, color = "#3b3b3b")  +
+  theme(title = element_text(hjust = 0)) +
+  labs(title = "Poverty and Unemployment in Argentina",
+       subtitle = "2015 — 2023\n") +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        legend.position = c(-.05, 1.04),
+        legend.direction = "horizontal",
+        legend.margin = ggplot2::margin(20, 0, 60, 0))
+econ_combined
+
+finalise_plot(plot_name = econ_combined,
+              source = "Sources: INDEC, ILO",
+              save_filepath = "figs/econ_combined.png")
+
+# Prices and Ransom kidnappings ----------------------------------------------
+se_ipc_linear <- ggplot(ipc, aes(x = ipc, y = cases)) +
+  geom_smooth(aes(color = "Average Relationship"),
+              method = "loess",
+              se = FALSE,
+              size = 1.8,
+              color = "#e6a6ba") +
+  geom_point(aes(color = "Kidnappings vs Inflation"), size = 2) +
+  geom_hline(yintercept = 0, color = "#3b3b3b") +
+  labs(title = "Kidnappings and Inflation in Argentina",
+       subtitle = "2016 — 2023\n") +
+  xlab("Inflation\n(Consumer Price Index)") +
+  ylab("Monthly Ransom\nKidnappings") +
+  scale_y_continuous(limits = c(0, NA)) + 
+  scale_color_manual(values = c("#B70039")) +
+  theme(plot.title = ggplot2::element_text(family = "Roboto Bold",
+                                           size = 24,
+                                           color = "#3B3B3B",
+                                           hjust = 0),
+              plot.subtitle = ggplot2::element_text(family = "Roboto",
+                                                    size = 19,
+                                                    color = "#3b3b3b",
+                                                    margin = ggplot2::margin(9, 0, 20, 0),
+                                                    hjust = 0),
+              plot.caption = ggplot2::element_blank(),
+              legend.position = c(-.165, 1.04),
+              legend.direction = "horizontal",
+              legend.justification = "left",
+              legend.background = ggplot2::element_blank(),
+              legend.title = ggplot2::element_blank(),
+              legend.margin = ggplot2::margin(0, 0, 25, 0),
+              legend.key = ggplot2::element_blank(),
+              legend.text = ggplot2::element_text(family = "Roboto Italic",
+                                                  size = 15,
+                                                  color = "#3b3b3b"),
+              axis.title = ggplot2::element_text(family = "Roboto Italic",
+                                                 size = 15,
+                                                 color = "#3b3b3b"),
+              axis.title.y = element_text(margin = ggplot2::margin(r = 20),
+                                          angle = 90),
+              axis.text = ggplot2::element_text(family = "Roboto",
+                                                size = 15,
+                                                color = "#b3b3b3"),
+              axis.text.x = ggplot2::element_text(
+                margin = ggplot2::margin(5, b = 10),
+                color = "#3b3b3b"),
+              axis.ticks = ggplot2::element_blank(),
+              axis.line = ggplot2::element_blank(),
+              panel.grid.minor = ggplot2::element_blank(),
+              panel.grid.major.x = ggplot2::element_blank(),
+              panel.grid.major.y = ggplot2::element_line(
+                linetype = 2,
+                color = "#b3b3b3"),
+              panel.background = ggplot2::element_blank(),
+              strip.background = ggplot2::element_rect(fill = "#FAFAFA"),
+              strip.text = ggplot2::element_text(size = 15,
+                                                 hjust = 0,
+                                                 color = "#3b3b3b"))
+se_ipc_linear
+
+finalise_plot(plot_name = se_ipc_linear,
+              source = "Sources: UFESE, INDEC",
+              save_filepath = "figs/se_ipc_linear.png")
+
+
+# yearly trends and groups taken down ----------------------------------------
+yearly_anns <- ggplot() +
+  geom_line(se_yr,
+            mapping = aes(x = yr,
+                          y = se,
+                          group = 1,
+                          color = "# of Cases"),
+            size = .75) +
+  geom_segment(aes(x = 2015, y = 50, xend = 2015, yend = 100)) +
+  geom_segment(aes(x = 2015, y = 50, xend = 2016.8333, yend = 50)) +
+  geom_segment(aes(x = 2016.8333, y = 50, xend = 2016.8333, yend = 0),
+               arrow = arrow(length = unit(0.25, "cm"))) +
+  geom_label(mapping = aes(x = 2014.1, y = 110,
+                           # label = "La banda de\nPoroto, Pastor y\nNarvaja dismantled",
+                           label = "Poroto, Pastor\ny Narvaja Gang\ndismantled",
+                           hjust = "left", family = "Roboto"),
+             fill = "#c6d1db",
+             size = 13 / .pt, label.r = unit(0, "lines"), label.size = NA) +
+  geom_segment(aes(x = 2017.25, y = 110, xend = 2017.25, yend = 0),
+               arrow = arrow(length = unit(0.25, "cm"))) +
+  geom_label(mapping = aes(x = 2016.3, y = 110,
+                           #label = "M 19 and La\nBanda del FAL\ndismantled",
+                           label = "M 19 and\nthe FAL Gang\ndismantled",
+                           hjust = "left", family = "Roboto"),
+             fill = "#c6d1db",
+             size = 13 / .pt, label.r = unit(0, "lines"), label.size = NA) +
+  geom_segment(aes(x = 2019.333, y = 110, xend = 2019.333, yend = 0),
+               arrow = arrow(length = unit(0.25, "cm")))+
+  geom_label(mapping = aes(x = 2018.6, y = 110,
+                           # label = "La Banda\ndel Focus\ndismantled",
+                           label = "The Focus\nGang\ndismantled",
+                           hjust = "left", family = "Roboto"),
+             fill = "#c6d1db",
+             size = 13 / .pt, label.r = unit(0, "lines"), label.size = NA) +
+  geom_segment(aes(x = 2020.8333, y = 110, xend = 2020.8333, yend = 0),
+               arrow = arrow(length = unit(0.25, "cm"))) +
+  geom_label(mapping = aes(x = 2020.3, y = 110,
+                           #label = "La Banda de\nla Cuarentena\ndismantled",
+                           label = "The Cuarentena\nGang\ndismantled",
+                           hjust = "left", family = "Roboto"),
+             fill = "#c6d1db",
+             size = 13 / .pt, label.r = unit(0, "lines"), label.size = NA) +
+  geom_hline(yintercept = 0, color = "#3b3b3b") +
+  ylab("Number of Cases") +
+  xlab("Year") + 
+  labs(title = "Kidnapping Groups Dismantled",
+       subtitle = "2015 — 2023\n") +
+  scale_x_continuous(breaks = c(2016, 2018, 2020, 2022),
+                     labels = c("2016", "2018","2020", "2022")) +
+  scale_color_manual(values = "#B70039") +
+  theme(title = element_text(hjust = 0),
+        plot.subtitle = element_text(margin = ggplot2::margin(t = 10, b = 25),
+                                     family = "Roboto",
+                                     size = 19,
+                                     color = "#3b3b3b",
+                                     hjust = 0),
+        legend.position = c(-.06, 1.04),
+        legend.direction = "horizontal",
+        legend.margin = ggplot2::margin(0, 0, 35, 0)
+  )
+yearly_anns
+
+finalise_plot(plot_name = yearly_anns,
+              source = "Source: UFESE",
+              save_filepath = "figs/yearly_anns.png")
