@@ -3,6 +3,7 @@ library(ICplots)
 library(rvest)
 
 
+# Search for Provinces
 prs <- read_csv("data/gendameria_2023-06-07.csv")
 prs$prov <- NA
 
@@ -29,9 +30,12 @@ for (i in seq_along(prov)) {
   }
 }
 
+# clean up extra characters fror the poorly written loop above
 prs$prov <- gsub("NA", "", prs$prov)
 prs$prov <- gsub("\\s+", " ", prs$prov, perl = TRUE)
 
+
+# find press releases that mention marijuana, add the amount seized if possible
 marijuana <- prs %>%
   mutate(date = as.POSIXlt(date),
          title = gsub("[.]", "", title),
@@ -48,6 +52,7 @@ marijuana <- prs %>%
 write_excel_csv(marijuana, "data/gendameria_marijuana_2023-06-07.csv") 
   
 
+# find press releases that mention cocaine, add the amount seized if possible
 cocaine <- prs %>%
   mutate(date = as.POSIXlt(date),
          title = gsub("[.]", "", title),
@@ -74,6 +79,7 @@ entre_rios <- prs %>%
 
 write_excel_csv(entre_rios, "data/gendameria_entre_rios_2023-06-07.csv") 
 
+# find press releases that mention tires, add the amount seized if possible
 tires <- prs %>%
   mutate(date = as.POSIXlt(date),
          title = gsub("[.]", "", title),

@@ -7,9 +7,16 @@ library(parallel) # for detectCores()
 
 plan(multisession, workers = detectCores() - 1) # use all but one core
 
+url <- "https://www.argentina.gob.ar/gendarmeria/noticias"
+max_pages <- read_html(url) %>%
+  html_element(".pager-last") %>%
+  html_element("a") %>%
+  html_attr("href") %>%
+  sub(".*page=", "", .)
+
 get_links <- function(i) {
   if (i == 1) {
-    url <- "https://www.argentina.gob.ar/gendarmeria/noticias"
+    #url <- "https://www.argentina.gob.ar/gendarmeria/noticias"
     links <- read_html(url) %>%
       html_elements("a") %>%
       html_attr("href") %>%
@@ -37,7 +44,7 @@ get_links <- function(i) {
 # scraping the news site to get the articles
 #all_links <- map(seq_len(227), get_links) %>%
 #  unlist()
-all_links <- future_map(seq_len(227), get_links) %>%
+all_links <- future_map(seq_len(as.numeric(max_pages)), get_links) %>%
   unlist()
 
 # getting the press releases
@@ -81,4 +88,4 @@ get_article <- function(i) {
 all_articles <- future_map_dfr(seq_along(all_links), get_article) 
 #all_articles <- future_map_dfr(seq_len(3), get_article) 
  
-write_excel_csv(all_articles, "data/gendameria_2023-06-07.csv")
+write_excel_csv(all_articles, "data/gendameria_2023-06-28.csv")
