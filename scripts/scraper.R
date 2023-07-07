@@ -86,6 +86,7 @@ get_article <- function(i) {
 
 # extract date, url, and title for a dataset
 all_articles <- future_map_dfr(seq_along(all_links), get_article) 
-#all_articles <- future_map_dfr(seq_len(3), get_article) 
  
-write_excel_csv(all_articles, "data/gendameria_2023-06-28.csv")
+# saving with today's date in the file name
+file_name <- paste0("data/gendarmeria_", Sys.Date(), ".csv")
+write_excel_csv(all_articles, file_name)
