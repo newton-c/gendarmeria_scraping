@@ -4,7 +4,7 @@ library(rvest)
 
 
 # Search for Provinces
-prs <- read_csv("data/gendameria_2023-06-07.csv")
+prs <- read_csv("data/gendarmeria_2023-07-12.csv")
 prs$prov <- NA
 
 prov <- read_html("https://es.wikipedia.org/wiki/Provincias_de_Argentina") %>%
@@ -34,6 +34,18 @@ for (i in seq_along(prov)) {
 prs$prov <- gsub("NA", "", prs$prov)
 prs$prov <- gsub("\\s+", " ", prs$prov, perl = TRUE)
 
+
+# find press releases talking about contraband
+contraband_keys <- c("contrabando", "contrabanda", "contrabandeado",
+                     "aval legal", "cigarillos")
+contraband <- prs %>%
+  mutate(date = as.POSIXlt(date),
+         year = as.numeric(format(date, format = "%Y")),
+         month = as.numeric(format(date, format = "%m")),
+         year_month = as.numeric(format(date, format = "%Y.%m")),
+         filter_col = grepl(paste(contraband_keys, collapse='|'), text)) %>%
+  filter(filter_col == TRUE) %>%
+  mutate(contraband_events = ifelse(filter_col == TRUE, 1, 0))
 
 # find press releases that mention marijuana, add the amount seized if possible
 marijuana <- prs %>%
@@ -91,7 +103,7 @@ tires <- prs %>%
          filter_col = grepl("neumáticos|cubiertas", text)) %>%
   filter(filter_col == TRUE) %>%
   select(-filter_col)
-write_excel_csv(tires, "data/gendameria_tires_2023-06-07.csv") 
+write_excel_csv(tires, "data/gendameria_tires_2023-07-12.csv") 
 
 time_plot <- ggplot(tires, aes(x = tires)) +
   geom_histogram() +
@@ -109,21 +121,42 @@ year_plot <- ggplot(yearly, aes(x = year, y = tires)) +
   labs(title = "Illegal Tire Seizures") +
   ylab("# of Tires Seized") +
   geom_hline(yintercept = 0, color = "#3B3B3B") +
-  theme_ic()
+  theme_ic()  + 
+  theme(axis.title = element_text(hjust = .5))
 year_plot
 finalise_plot(year_plot,
               source_name = "Gendarmería Nacional Argentina",
               save_filepath = "tires_seized.png")
 
-# monthly seizures
-monthly <- cocaine %>%
-  select(date, year_month, coke_kilos) %>%
-  group_by(year_month) %>%
-  summarize(coke_kilos = sum(coke_kilos),
-            date = min(date))
+# yearly contraband
+yearly_cont <- contraband %>%
+  select(year, contraband_events) %>%
+  group_by(year) %>%
+  summarise(contraband_events = sum(contraband_events))
 
-month_plot <- ggplot(monthly, aes(x = date, y = coke_kilos)) +
+year_cont_plot <- ggplot(yearly_cont, aes(x = year, y = contraband_events)) +
+  geom_col(fill = "#B70039") +
+  labs(title = "Contraband Seizures") +
+  ylab("# of seizured involving contraband") + 
+  xlab("Year") +
+  geom_hline(yintercept = 0, color = "#3B3B3B") +
+  theme_ic() + 
+  theme(axis.title = element_text(hjust = .5))
+year_cont_plot
+finalise_plot(year_cont_plot,
+              source_name = "Gendarmería Nacional Argentina",
+              save_filepath = "contraband_events.png")
+
+# monthly seizures
+monthly <- tires %>%
+  select(date, year_month, tires) %>%
+  group_by(year_month) %>%
+  summarize(tires = sum(tires),
+            date = min(date)) 
+
+month_plot <- ggplot(monthly, aes(x = date, y = tires)) +
   geom_line(group = 1) +
   theme_ic() +
     theme(axis.ticks.x = element_line())
 month_plot
+
