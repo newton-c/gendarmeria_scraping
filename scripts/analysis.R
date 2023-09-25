@@ -4,7 +4,7 @@ library(rvest)
 
 
 # Search for Provinces
-prs <- read_csv("data/gendarmeria_2023-07-12.csv")
+prs <- read_csv("data/gendarmeria_2023-09-25.csv")
 prs$prov <- NA
 
 prov <- read_html("https://es.wikipedia.org/wiki/Provincias_de_Argentina") %>%
@@ -44,6 +44,17 @@ contraband <- prs %>%
          month = as.numeric(format(date, format = "%m")),
          year_month = as.numeric(format(date, format = "%Y.%m")),
          filter_col = grepl(paste(contraband_keys, collapse='|'), text)) %>%
+  filter(filter_col == TRUE) %>%
+  mutate(contraband_events = ifelse(filter_col == TRUE, 1, 0))
+
+
+# find press releases talking about contraband cigarettes
+cigarrillos <- prs %>%
+  mutate(date = as.POSIXlt(date),
+         year = as.numeric(format(date, format = "%Y")),
+         month = as.numeric(format(date, format = "%m")),
+         year_month = as.numeric(format(date, format = "%Y.%m")),
+         filter_col = grepl("cigarrillos", text)) %>%
   filter(filter_col == TRUE) %>%
   mutate(contraband_events = ifelse(filter_col == TRUE, 1, 0))
 
@@ -129,14 +140,14 @@ finalise_plot(year_plot,
               save_filepath = "tires_seized.png")
 
 # yearly contraband
-yearly_cont <- contraband %>%
+yearly_cont <- cigarrillos %>%
   select(year, contraband_events) %>%
   group_by(year) %>%
   summarise(contraband_events = sum(contraband_events))
 
 year_cont_plot <- ggplot(yearly_cont, aes(x = year, y = contraband_events)) +
   geom_col(fill = "#B70039") +
-  labs(title = "Contraband Seizures") +
+  labs(title = "Contraband Cigarette Seizures") +
   ylab("# of seizured involving contraband") + 
   xlab("Year") +
   geom_hline(yintercept = 0, color = "#3B3B3B") +
@@ -148,14 +159,14 @@ finalise_plot(year_cont_plot,
               save_filepath = "contraband_events.png")
 
 # monthly seizures
-monthly <- tires %>%
-  select(date, year_month, tires) %>%
+monthly <- cigarrillos %>%
+  select(year_month, contraband_events) %>%
   group_by(year_month) %>%
-  summarize(tires = sum(tires),
-            date = min(date)) 
+  summarize(contraband_events = sum(contraband_events)) 
 
-month_plot <- ggplot(monthly, aes(x = date, y = tires)) +
-  geom_line(group = 1) +
+month_plot <- ggplot(monthly, aes(x = year_month, y = contraband_events)) +
+  geom_col(fill = "#B70039") +
+  hline +
   theme_ic() +
     theme(axis.ticks.x = element_line())
 month_plot
